@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Policy Test Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        
+        .content {
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        /* Cookie Banner Styles */
+        #cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .cookie-content {
+            max-width: 800px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .cookie-content h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .cookie-content p {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 0;
+        }
+
+        .cookie-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-accept {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-accept:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-reject {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-manage {
+            background-color: #ecf0f1;
+            color: #333;
+            border: 1px solid #bdc3c7;
+        }
+
+        .btn-manage:hover {
+            background-color: #bdc3c7;
+        }
+
+        /* Test specific classes simulating typical cookie banner descriptors */
+        .cookie-notice, .cmp-banner, .cookie-consent-wrapper {
+            /* just to have some classes that the extension might look for */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        <h1>Welcome to the Test Site</h1>
+        <p>This page is designed specifically to test the automatic cookies reading and accepting feature of your browser extension.</p>
+        <p>The cookie banner should appear at the bottom of the screen. Your extension should be able to:
+            <ul>
+                <li>Detect the presence of the cookie banner.</li>
+                <li>Read and extract the text from the banner to summarize the policy.</li>
+                <li>Automatically interact with the "Accept" or "Reject" buttons based on user preferences.</li>
+            </ul>
+        </p>
+        
+        <h2>Page Content</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi. Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat.</p>
+        
+        <div id="status" style="margin-top: 20px; padding: 15px; background-color: #e8f8f5; border-left: 4px solid #1abc9c; display: none;">
+            <strong>Status:</strong> <span id="status-text">Cookies accepted.</span>
+        </div>
+    </div>
+
+    <!-- The Cookie Banner -->
+    <div id="cookie-banner" class="cookie-notice cmp-banner cookie-consent-wrapper">
+        <div class="cookie-content">
+            <h2>We Value Your Privacy</h2>
+            <p id="cookie-policy-text">
+                We use cookies and similar technologies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies. We may share information about your use of our site with our social media, advertising and analytics partners who may combine it with other information that you've provided to them or that they've collected from your use of their services. You can manage your preferences by clicking "Manage Cookies".
+            </p>
+        </div>
+        <div class="cookie-buttons">
+            <button id="btn-manage" class="btn btn-manage">Manage Cookies</button>
+            <button id="btn-reject" class="btn btn-reject">Reject All</button>
+            <button id="btn-accept" class="btn btn-accept">Accept All</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const banner = document.getElementById("cookie-banner");
+            const btnAccept = document.getElementById("btn-accept");
+            const btnReject = document.getElementById("btn-reject");
+            const btnManage = document.getElementById("btn-manage");
+            const statusDiv = document.getElementById("status");
+            const statusText = document.getElementById("status-text");
+
+            // Check if user already made a choice
+            if (localStorage.getItem("cookie_consent")) {
+                banner.style.display = "none";
+                statusDiv.style.display = "block";
+                statusText.innerText = "Cookies previously " + localStorage.getItem("cookie_consent") + ".";
+            }
+
+            function handleChoice(choice) {
+                // Save choice
+                localStorage.setItem("cookie_consent", choice);
+                // Hide banner
+                banner.style.display = "none";
+                // Show status
+                statusDiv.style.display = "block";
+                statusText.innerText = `Cookies ${choice}.`;
+                
+                // Simulate setting an actual cookie
+                document.cookie = `consent_status=${choice}; path=/; max-age=31536000`;
+            }
+
+            btnAccept.addEventListener("click", () => handleChoice("accepted"));
+            btnReject.addEventListener("click", () => handleChoice("rejected"));
+            btnManage.addEventListener("click", () => alert("Manage cookies dialog would open here."));
+        });
+    </script>
+
+</body>
+</html>
