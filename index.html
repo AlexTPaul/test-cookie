@@ -151,12 +151,57 @@
         </div>
     </div>
 
+    <!-- Manage Cookies Modal -->
+    <div id="manage-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%;">
+            <h2 style="margin-top: 0;">Manage Cookie Preferences</h2>
+            <p style="font-size: 0.9rem; color: #666;">Select which cookies you want to accept.</p>
+            
+            <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+                    <span>Strictly Necessary Cookies</span>
+                    <input type="checkbox" id="cookie-strict" checked disabled>
+                </label>
+                <p style="font-size: 0.8rem; color: #7f8c8d; margin: 5px 0 0 0;">These cookies are essential for the website to function properly. They cannot be turned off.</p>
+            </div>
+            
+            <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+                    <span>Analytics Cookies</span>
+                    <input type="checkbox" id="cookie-analytics">
+                </label>
+                <p style="font-size: 0.8rem; color: #7f8c8d; margin: 5px 0 0 0;">These cookies help us understand how visitors interact with our website.</p>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+                    <span>Marketing Cookies</span>
+                    <input type="checkbox" id="cookie-marketing">
+                </label>
+                <p style="font-size: 0.8rem; color: #7f8c8d; margin: 5px 0 0 0;">These cookies are used to track visitors across websites to display relevant ads.</p>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="btn-save-preferences" class="btn btn-accept">Save Preferences</button>
+                <button id="btn-close-modal" class="btn btn-manage">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const banner = document.getElementById("cookie-banner");
             const btnAccept = document.getElementById("btn-accept");
             const btnReject = document.getElementById("btn-reject");
             const btnManage = document.getElementById("btn-manage");
+            
+            const modal = document.getElementById("manage-modal");
+            const btnSavePreferences = document.getElementById("btn-save-preferences");
+            const btnCloseModal = document.getElementById("btn-close-modal");
+            
+            const checkboxAnalytics = document.getElementById("cookie-analytics");
+            const checkboxMarketing = document.getElementById("cookie-marketing");
+
             const statusDiv = document.getElementById("status");
             const statusText = document.getElementById("status-text");
 
@@ -164,25 +209,60 @@
             if (localStorage.getItem("cookie_consent")) {
                 banner.style.display = "none";
                 statusDiv.style.display = "block";
-                statusText.innerText = "Cookies previously " + localStorage.getItem("cookie_consent") + ".";
+                
+                let consentStr = localStorage.getItem("cookie_consent");
+                try {
+                    let prefs = JSON.parse(consentStr);
+                    statusText.innerText = "Preferences saved: Strict (Yes), Analytics (" + (prefs.analytics ? "Yes" : "No") + "), Marketing (" + (prefs.marketing ? "Yes" : "No") + ").";
+                } catch(e) {
+                    statusText.innerText = "Cookies previously " + consentStr + ".";
+                }
             }
 
-            function handleChoice(choice) {
+            function handleChoice(choiceType) {
+                let prefs = { strict: true, analytics: false, marketing: false };
+                
+                if (choiceType === "accepted") {
+                    prefs.analytics = true;
+                    prefs.marketing = true;
+                } else if (choiceType === "custom") {
+                    prefs.analytics = checkboxAnalytics.checked;
+                    prefs.marketing = checkboxMarketing.checked;
+                }
+                
+                const prefsStr = JSON.stringify(prefs);
+                
                 // Save choice
-                localStorage.setItem("cookie_consent", choice);
-                // Hide banner
+                localStorage.setItem("cookie_consent", prefsStr);
+                
+                // Set actual document cookies based on selection
+                if (prefs.analytics) document.cookie = `analytics_consent=true; path=/; max-age=31536000`;
+                if (prefs.marketing) document.cookie = `marketing_consent=true; path=/; max-age=31536000`;
+                document.cookie = `strict_consent=true; path=/; max-age=31536000`;
+
+                // Hide banner/modal
                 banner.style.display = "none";
+                modal.style.display = "none";
+                
                 // Show status
                 statusDiv.style.display = "block";
-                statusText.innerText = `Cookies ${choice}.`;
-                
-                // Simulate setting an actual cookie
-                document.cookie = `consent_status=${choice}; path=/; max-age=31536000`;
+                statusText.innerText = "Preferences saved: Strict (Yes), Analytics (" + (prefs.analytics ? "Yes" : "No") + "), Marketing (" + (prefs.marketing ? "Yes" : "No") + ").";
             }
 
             btnAccept.addEventListener("click", () => handleChoice("accepted"));
             btnReject.addEventListener("click", () => handleChoice("rejected"));
-            btnManage.addEventListener("click", () => alert("Manage cookies dialog would open here."));
+            
+            btnManage.addEventListener("click", () => {
+                modal.style.display = "flex";
+            });
+            
+            btnCloseModal.addEventListener("click", () => {
+                modal.style.display = "none";
+            });
+            
+            btnSavePreferences.addEventListener("click", () => {
+                handleChoice("custom");
+            });
         });
     </script>
 
